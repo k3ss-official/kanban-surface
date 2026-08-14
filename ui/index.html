@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kanban Surface</title>
+<style>
+  :root {
+    --bg:#f6f7f9; --card:#fff; --ink:#1a1d21; --mut:#6b7280; --line:#e5e7eb;
+    --acc:#2563eb; --ok:#15803d; --warn:#b45309; --bad:#b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#111417; --card:#1c2128; --ink:#e6e8ea; --mut:#9aa4af; --line:#2d333b;
+            --acc:#4f8ef7; --ok:#4ade80; --warn:#fbbf24; --bad:#f87171; }
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--ink);
+         font:14px/1.45 ui-sans-serif, system-ui, sans-serif; padding:16px 16px 8px; }
+  header { display:flex; align-items:baseline; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+  h1 { font-size:17px; letter-spacing:-.01em; }
+  #who { font-size:12px; color:var(--mut); }
+  #status { font-size:12px; color:var(--mut); margin-left:auto; }
+  #status.err { color:var(--bad); }
+
+  #board { display:flex; gap:12px; overflow-x:auto; align-items:flex-start; padding-bottom:8px; }
+  .col { min-width:240px; flex:1 1 0; background:color-mix(in srgb, var(--card) 50%, var(--bg));
+         border:1px solid var(--line); border-radius:10px; padding:10px; }
+  .col h2 { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--mut);
+            margin-bottom:8px; display:flex; justify-content:space-between; }
+  .col.dragover { outline:2px dashed var(--acc); outline-offset:-4px; }
+  .col.forbidden { outline:2px dashed var(--bad); outline-offset:-4px; }
+
+  .task { background:var(--card); border:1px solid var(--line); border-radius:8px;
+          padding:8px 10px; margin-bottom:8px; cursor:grab; }
+  .task:hover { border-color:var(--acc); }
+  .task.sel { border-color:var(--acc); box-shadow:0 0 0 1px var(--acc); }
+  .task .ref { font-size:11px; color:var(--acc); font-weight:600; font-family:ui-monospace,monospace; }
+  .task .title { margin:2px 0 4px; }
+  .task .meta { font-size:11px; color:var(--mut); display:flex; gap:6px; align-items:center; }
+  .dot { width:6px; height:6px; border-radius:50%; background:var(--mut); flex:none; }
+  .dot.running { background:var(--acc); } .dot.blocked { background:var(--bad); }
+  .dot.ready { background:var(--warn); } .dot.done { background:var(--ok); }
+
+  #panel { position:fixed; top:0; right:0; width:min(420px,100%); height:100%;
+           background:var(--card); border-left:1px solid var(--line); padding:18px;
+           overflow-y:auto; transform:translateX(100%); transition:transform .16s ease; }
+  #panel.open { transform:none; }
+  #panel h3 { font-size:15px; margin-bottom:2px; }
+  #panel .ref { font-family:ui-monospace,monospace; color:var(--acc); font-size:12px; }
+  #panel pre { background:var(--bg); border:1px solid var(--line); border-radius:6px;
+               padding:8px; font-size:12px; white-space:pre-wrap; margin:10px 0;
+               font-family:ui-monospace,monospace; }
+  #p-source-link { color:var(--acc); font-size:12px; text-decoration:none; }
+  #p-source-link:hover { text-decoration:underline; }
+  #close { position:absolute; top:12px; right:14px; background:none; color:var(--mut);
+           font-size:20px; line-height:1; padding:2px 6px; }
+  .receipt { border-left:3px solid var(--line); padding:4px 0 4px 9px; margin:9px 0; }
+  .receipt .tok { font-family:ui-monospace,monospace; font-size:11px; font-weight:700; }
+  .receipt.done .tok, .receipt.verified .tok { color:var(--ok); }
+  .receipt.blocked .tok, .receipt.hold .tok { color:var(--warn); }
+  .receipt.rejected .tok, .receipt.failed .tok { color:var(--bad); }
+  .receipt .by { font-size:11px; color:var(--mut); }
+  .receipt .body { font-size:13px; white-space:pre-wrap; }
+  h4 { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--mut);
+       margin:16px 0 4px; }
+
+  dialog { border:1px solid var(--line); border-radius:10px; background:var(--card);
+           color:var(--ink); padding:22px; }
+  dialog::backdrop { background:#0008; }
+  input { width:290px; padding:7px 9px; border:1px solid var(--line); border-radius:6px;
+          background:var(--bg); color:var(--ink); font:inherit; }
+  button { padding:7px 13px; border:0; border-radius:6px; background:var(--acc); color:#fff;
+           cursor:pointer; font:inherit; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Kanban Surface</h1>
+  <span id="who"></span>
+  <span id="status">loading…</span>
+</header>
+<div id="board"></div>
+
+<aside id="panel" hidden>
+  <button id="close" title="Close">×</button>
+  <div class="ref" id="p-ref"></div>
+  <h3 id="p-title"></h3>
+  <div class="meta" id="p-meta"></div>
+  <pre id="p-body"></pre>
+  <h4>Canonical project source</h4>
+  <a id="p-source-link" target="_blank" rel="noopener"></a>
+  <pre id="p-source"></pre>
+  <h4>Receipts</h4>
+  <div id="p-receipts"></div>
+</aside>
+
+<dialog id="auth"><form method="dialog" id="authform">
+  <p style="margin-bottom:12px">Gateway token</p>
+  <input id="tokenInput" type="password" autocomplete="off" placeholder="Bearer token">
+  <button>Enter</button>
+</form></dialog>
+
+<script>
+const BOARDS = ["sys-intake","work-research","work-knowledge","work-engineering",
+                "work-infra","work-writer","sys-input","sys-audit","sys-done"];
+const NICE = {"sys-intake":"Intake","work-research":"Research",
+              "work-knowledge":"Knowledge","work-engineering":"Engineering",
+              "work-infra":"Infrastructure","work-writer":"Writer",
+              "sys-input":"Needs Input","sys-audit":"Audit","sys-done":"Done"};
+// Receipt tokens, longest first so HUMAN ANSWERED never matches as HUMAN HOLD's prefix.
+const RECEIPTS = [
+  ["AGENT HUMAN ANSWERED","hold"],["AGENT HUMAN HOLD","hold"],["AGENT UNBLOCKED","done"],
+  ["AGENT BLOCKED","blocked"],["AGENT REJECTED","rejected"],["AGENT VERIFIED","verified"],
+  ["AGENT RESUMED","done"],["AGENT CLAIMED",""],["AGENT FAILED","failed"],
+  ["AGENT DONE","done"],["AGENT STATUS",""],
+];
+const $ = id => document.getElementById(id);
+let token = localStorage.getItem("ks_token") || "";
+let selected = null;
+
+const esc = s => String(s ?? "").replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+const cmRef = b => (String(b||"").match(/^cm_ref:\s*(.+)$/m) || [,"—"])[1];
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, {...opts, headers: {
+    "Authorization": "Bearer " + token, "Content-Type": "application/json",
+    ...(opts.headers || {})}});
+  if (r.status === 401) { localStorage.removeItem("ks_token"); token = ""; askToken();
+                          throw new Error("auth"); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || ("HTTP " + r.status));
+  return data;
+}
+
+function askToken() { $("auth").showModal(); }
+$("authform").addEventListener("submit", () => {
+  token = $("tokenInput").value.trim();
+  localStorage.setItem("ks_token", token);
+  refresh();
+});
+$("close").addEventListener("click", closePanel);
+addEventListener("keydown", e => { if (e.key === "Escape") closePanel(); });
+
+function closePanel() {
+  $("panel").classList.remove("open");
+  setTimeout(() => $("panel").hidden = true, 160);
+  selected = null;
+  document.querySelectorAll(".task.sel").forEach(e => e.classList.remove("sel"));
+}
+
+function classify(body) {
+  for (const [tok, cls] of RECEIPTS) if (body.trim().startsWith(tok)) return [tok, cls];
+  return [null, ""];
+}
+
+async function openCard(id) {
+  selected = id;
+  document.querySelectorAll(".task").forEach(e =>
+    e.classList.toggle("sel", e.dataset.id === id));
+  const t = await api("/tasks/" + id);
+  $("p-ref").textContent = cmRef(t.body);
+  $("p-title").textContent = t.title || "";
+  $("p-meta").textContent = `${t.id} · ${NICE[t.assignee] || t.assignee || "—"} · ${t.status || ""}`;
+  $("p-body").textContent = t.body || "(no body)";
+  $("p-source-link").textContent = "";
+  $("p-source-link").removeAttribute("href");
+  $("p-source").textContent = "Loading work-ledger source…";
+  api(`/tasks/${id}/source`).then(source => {
+    $("p-source-link").textContent = source.path || "";
+    if (source.url) $("p-source-link").href = source.url;
+    $("p-source").textContent = source.markdown || "(empty source)";
+  }).catch(e => {
+    $("p-source").textContent = e.message === "auth"
+      ? "Authentication required."
+      : "No linked work-ledger source.";
+  });
+  const box = $("p-receipts");
+  box.innerHTML = "";
+  const comments = t.comments || [];
+  if (!comments.length) box.innerHTML = '<div class="by">No receipts yet.</div>';
+  for (const c of comments) {
+    const body = (typeof c === "string") ? c : (c.body || "");
+    const author = (typeof c === "object" && c.author) ? c.author : "";
+    const [tok, cls] = classify(body);
+    const el = document.createElement("div");
+    el.className = "receipt " + cls;
+    el.innerHTML =
+      (tok ? `<div class="tok">${esc(tok)}</div>` : "") +
+      `<div class="body">${esc(tok ? body.slice(tok.length).trim() : body)}</div>` +
+      (author ? `<div class="by">— ${esc(author)}</div>` : "");
+    box.appendChild(el);
+  }
+  $("panel").hidden = false;
+  requestAnimationFrame(() => $("panel").classList.add("open"));
+}
+
+async function move(taskId, board) {
+  $("status").textContent = `moving ${taskId} → ${NICE[board]}…`;
+  $("status").className = "";
+  try {
+    await api(`/tasks/${taskId}/move`, {method: "POST", body: JSON.stringify({board})});
+  } catch (e) {
+    if (e.message !== "auth") {
+      $("status").textContent = "refused: " + e.message;   // the gateway's own reason
+      $("status").className = "err";
+      setTimeout(refresh, 2500);
+    }
+    return;
+  }
+  refresh();
+}
+
+function render(tasks) {
+  const board = $("board");
+  board.innerHTML = "";
+  for (const b of BOARDS) {
+    const mine = tasks.filter(t => (t.assignee || "") === b);
+    const col = document.createElement("div");
+    col.className = "col";
+    col.innerHTML = `<h2><span>${NICE[b]}</span><span>${mine.length || ""}</span></h2>`;
+    col.addEventListener("dragover", e => { e.preventDefault(); col.classList.add("dragover"); });
+    col.addEventListener("dragleave", () => col.classList.remove("dragover"));
+    col.addEventListener("drop", e => {
+      e.preventDefault(); col.classList.remove("dragover");
+      const id = e.dataTransfer.getData("text/plain");
+      if (id) move(id, b);                        // the drag IS the dispatch
+    });
+    for (const t of mine) {
+      const el = document.createElement("div");
+      el.className = "task" + (t.id === selected ? " sel" : "");
+      el.draggable = true;
+      el.dataset.id = t.id;
+      el.addEventListener("dragstart", e => e.dataTransfer.setData("text/plain", t.id));
+      el.addEventListener("click", () => openCard(t.id));
+      el.innerHTML = `<div class="ref">${esc(cmRef(t.body))}</div>
+        <div class="title">${esc(t.title)}</div>
+        <div class="meta"><span class="dot ${esc(t.status)}"></span>${esc(t.id)} · ${esc(t.status || "")}</div>`;
+      col.appendChild(el);
+    }
+    board.appendChild(col);
+  }
+}
+
+async function refresh() {
+  if (!token) return askToken();
+  try {
+    const [tasks, workerState] = await Promise.all([api("/tasks"), api("/workers")]);
+    render(tasks);
+    $("status").textContent = `${tasks.length} cards · ${workerState.working_count} working · ${new Date().toLocaleTimeString()}`;
+    $("status").className = "";
+    if (selected && tasks.some(t => t.id === selected)) openCard(selected);
+  } catch (e) {
+    if (e.message !== "auth") {
+      $("status").textContent = "error: " + e.message;
+      $("status").className = "err";
+    }
+  }
+}
+
+refresh();
+setInterval(() => { if (!document.hidden) refresh(); }, 20000);
+</script>
+</body>
+</html>

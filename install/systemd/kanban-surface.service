@@ -1,0 +1,24 @@
+[Unit]
+Description=Kanban Surface permission gateway and UI
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hermes
+Group=hermes
+WorkingDirectory=/var/lib/hermes/kanban-surface
+Environment=HOME=/var/lib/hermes
+Environment=PATH=/var/lib/hermes/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HERMES_KANBAN_BOARD=kanban-surface
+ExecStart=/usr/bin/python3 /var/lib/hermes/kanban-surface/gateway/gateway.py
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/hermes
+
+[Install]
+WantedBy=multi-user.target

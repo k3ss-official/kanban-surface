@@ -1,0 +1,10 @@
+[Unit]
+Description=Write hourly Kanban snapshot to work ledger
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+Unit=kanban-snapshot.service
+
+[Install]
+WantedBy=timers.target

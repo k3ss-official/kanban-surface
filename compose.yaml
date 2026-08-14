@@ -1,0 +1,211 @@
+name: ${COMPOSE_PROJECT_NAME:-hermes-ksm}
+
+x-hermes-image: &hermes-image
+  image: ${HERMES_IMAGE:-nousresearch/hermes-agent:v2026.7.30@sha256:b869e64d6496d4763d5e4fb675b5f504cb23b0e35ec9b790481a56118602b10f}
+
+x-common: &common
+  <<: *hermes-image
+  restart: unless-stopped
+  init: false
+  environment:
+    HOME: /opt/data
+    HERMES_HOME: /opt/data
+    HERMES_UID: ${HERMES_UID:-10000}
+    HERMES_GID: ${HERMES_GID:-10000}
+    HERMES_KANBAN_BOARD: ${HERMES_KANBAN_BOARD:-kanban-surface}
+    KS_CONFIG: /etc/kanban-surface/config.json
+    KS_DIR: /workspace/kanban-surface
+  volumes:
+    - hermes_data:/opt/data
+    - ${KSM_SOURCE_DIR:-.}:/workspace/kanban-surface:ro
+    - ${WORK_LEDGER_DIR:-../work-ledger}:/workspace/work-ledger
+    - ${KSM_CONFIG_FILE:-./config.json}:/etc/kanban-surface/config.json:ro
+  networks:
+    - private
+
+services:
+  bootstrap:
+    <<: *common
+    restart: "no"
+    environment:
+      HOME: /opt/data
+      HERMES_HOME: /opt/data
+      HERMES_UID: ${HERMES_UID:-10000}
+      HERMES_GID: ${HERMES_GID:-10000}
+      HERMES_KANBAN_BOARD: ${HERMES_KANBAN_BOARD:-kanban-surface}
+      KS_CONFIG: /etc/kanban-surface/config.json
+      KS_DIR: /workspace/kanban-surface
+      KSM_PROFILE_SECRETS_DIR: /run/profile-secrets
+      OPEN_NOTEBOOK_GATEWAY_URL: http://open-notebook-gateway:8765
+    volumes:
+      - hermes_data:/opt/data
+      - ${KSM_SOURCE_DIR:-.}:/workspace/kanban-surface:ro
+      - ${WORK_LEDGER_DIR:-../work-ledger}:/workspace/work-ledger
+      - ${KSM_CONFIG_FILE:-./config.json}:/etc/kanban-surface/config.json:ro
+      - ${KSM_PROFILE_SECRETS_DIR:-./.runtime/profile-secrets}:/run/profile-secrets:ro
+    networks:
+      - private
+      - egress
+    command: ["/workspace/kanban-surface/docker/bootstrap.sh"]
+
+  hermes:
+    <<: *common
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    environment:
+      HOME: /opt/data
+      HERMES_HOME: /opt/data
+      HERMES_UID: ${HERMES_UID:-10000}
+      HERMES_GID: ${HERMES_GID:-10000}
+      HERMES_KANBAN_BOARD: ${HERMES_KANBAN_BOARD:-kanban-surface}
+      GATEWAY_MULTIPLEX_PROFILES: "1"
+      KS_CONFIG: /etc/kanban-surface/config.json
+      KS_DIR: /workspace/kanban-surface
+      OPEN_NOTEBOOK_GATEWAY_URL: http://open-notebook-gateway:8765
+    volumes:
+      - hermes_data:/opt/data
+      - ${KSM_SOURCE_DIR:-.}:/workspace/kanban-surface:ro
+      - ${WORK_LEDGER_DIR:-../work-ledger}:/workspace/work-ledger
+      - ${KSM_CONFIG_FILE:-./config.json}:/etc/kanban-surface/config.json:ro
+      - ${KSM_PROFILE_SECRETS_DIR:-./.runtime/profile-secrets}:/run/profile-secrets:ro
+    networks:
+      - private
+      - egress
+      - hermes_notebook
+    command: ["gateway", "run", "--external-supervisor"]
+
+  surrealdb:
+    image: ${SURREALDB_IMAGE:-surrealdb/surrealdb:v2@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011}
+    restart: unless-stopped
+    user: root
+    command: ["start", "--log", "info", "--user", "root", "--pass", "root", "rocksdb:/mydata/mydatabase.db"]
+    environment:
+      SURREAL_EXPERIMENTAL_GRAPHQL: "true"
+    volumes:
+      - surreal_data:/mydata
+    networks:
+      - notebook_db
+
+  open-notebook:
+    image: ${OPEN_NOTEBOOK_IMAGE:-lfnovo/open_notebook:1.14.0@sha256:e53f90d6153fcf4a64604d9a0c12cb0428a32cfb8dbcbb72e81ab12c013ee330}
+    restart: unless-stopped
+    depends_on:
+      surrealdb:
+        condition: service_started
+    environment:
+      OPEN_NOTEBOOK_ENCRYPTION_KEY_FILE: /run/open-notebook-secrets/encryption_key
+      OPEN_NOTEBOOK_PASSWORD_FILE: /run/open-notebook-secrets/upstream_password
+      SURREAL_URL: ws://surrealdb:8000/rpc
+      SURREAL_USER: root
+      SURREAL_PASSWORD: root
+      SURREAL_NAMESPACE: open_notebook
+      SURREAL_DATABASE: open_notebook
+    volumes:
+      - open_notebook_data:/app/data
+      - ${OPEN_NOTEBOOK_SECRETS_DIR:-./.runtime/open-notebook}:/run/open-notebook-secrets:ro
+    ports:
+      - "127.0.0.1:${OPEN_NOTEBOOK_UI_PORT:-8502}:8502"
+      - "127.0.0.1:${OPEN_NOTEBOOK_API_PORT:-5055}:5055"
+    networks:
+      - notebook_db
+      - notebook_api
+      - egress
+
+  open-notebook-gateway:
+    <<: *hermes-image
+    restart: unless-stopped
+    depends_on:
+      open-notebook:
+        condition: service_started
+    environment:
+      OPEN_NOTEBOOK_GATEWAY_HOST: 0.0.0.0
+      OPEN_NOTEBOOK_GATEWAY_PORT: 8765
+      OPEN_NOTEBOOK_UPSTREAM_URL: http://open-notebook:5055
+      OPEN_NOTEBOOK_UPSTREAM_PASSWORD_FILE: /run/open-notebook-secrets/upstream_password
+      OPEN_NOTEBOOK_READER_TOKEN_FILE: /run/open-notebook-secrets/reader_token
+      OPEN_NOTEBOOK_WRITER_TOKEN_FILE: /run/open-notebook-secrets/writer_token
+    volumes:
+      - ${KSM_SOURCE_DIR:-.}:/workspace/kanban-surface:ro
+      - ${OPEN_NOTEBOOK_SECRETS_DIR:-./.runtime/open-notebook}:/run/open-notebook-secrets:ro
+    ports:
+      - "127.0.0.1:${OPEN_NOTEBOOK_GATEWAY_PORT:-8765}:8765"
+    command: ["python3", "/workspace/kanban-surface/gateway/open_notebook_gateway.py"]
+    networks:
+      - notebook_api
+      - hermes_notebook
+
+  surface:
+    <<: *common
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      hermes:
+        condition: service_started
+    ports:
+      - "127.0.0.1:${KSM_PORT:-8742}:8742"
+    volumes:
+      - hermes_data:/opt/data
+      - ${KSM_SOURCE_DIR:-.}:/workspace/kanban-surface:ro
+      - ${WORK_LEDGER_DIR:-../work-ledger}:/workspace/work-ledger:ro
+      - ${KSM_CONFIG_FILE:-./config.json}:/etc/kanban-surface/config.json:ro
+      - surface_state:/var/lib/kanban-surface
+    command: ["python3", "/workspace/kanban-surface/gateway/gateway.py"]
+
+  watcher:
+    <<: *common
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      hermes:
+        condition: service_started
+    command: ["python3", "/workspace/kanban-surface/triggers/watcher.py"]
+
+  intake:
+    <<: *common
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      hermes:
+        condition: service_started
+    networks:
+      - private
+      - egress
+    command:
+      - /workspace/kanban-surface/docker/run-periodic.sh
+      - ${KSM_INTAKE_INTERVAL:-600}
+      - python3
+      - /workspace/kanban-surface/sync/intake_sync.py
+
+  snapshot:
+    <<: *common
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      hermes:
+        condition: service_started
+    networks:
+      - private
+      - egress
+    command:
+      - /workspace/kanban-surface/docker/run-periodic.sh
+      - ${KSM_SNAPSHOT_INTERVAL:-3600}
+      - python3
+      - /workspace/kanban-surface/sync/done_render.py
+
+networks:
+  private:
+    internal: true
+  notebook_db:
+    internal: true
+  notebook_api:
+    internal: true
+  hermes_notebook:
+    internal: true
+  egress: {}
+
+volumes:
+  hermes_data: {}
+  surface_state: {}
+  surreal_data: {}
+  open_notebook_data: {}

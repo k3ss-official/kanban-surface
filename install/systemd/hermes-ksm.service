@@ -1,0 +1,24 @@
+[Unit]
+Description=Hermes Kanban Surface Manager dispatcher
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hermes
+Group=hermes
+WorkingDirectory=/var/lib/hermes/work-ledger
+Environment=HOME=/var/lib/hermes
+Environment=PATH=/var/lib/hermes/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HERMES_KANBAN_BOARD=kanban-surface
+ExecStart=/var/lib/hermes/.local/bin/hermes gateway run --external-supervisor
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/hermes
+
+[Install]
+WantedBy=multi-user.target

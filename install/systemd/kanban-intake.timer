@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh Kanban Surface from work ledger every 10 minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=10min
+Persistent=true
+Unit=kanban-intake.service
+
+[Install]
+WantedBy=timers.target

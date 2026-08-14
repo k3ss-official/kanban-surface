@@ -1,0 +1,61 @@
+_config_version: 33
+
+gateway:
+  multiplex_profiles: true
+
+model:
+  provider: opencode-go
+  default: glm-5.2
+  persist_switch_by_default: false
+
+toolsets:
+  - kanban
+  - memory
+  - session_search
+  - skills
+  - clarify
+  - todo
+  - web
+
+platform_toolsets:
+  cli: &orchestrator_tools
+    - kanban
+    - memory
+    - session_search
+    - skills
+    - clarify
+    - todo
+    - web
+  gateway: *orchestrator_tools
+  whatsapp: *orchestrator_tools
+  whatsapp_cloud: *orchestrator_tools
+  cron: *orchestrator_tools
+
+agent:
+  disabled_toolsets:
+    - delegation
+  restart_drain_timeout: 180
+
+fallback_providers:
+  - provider: opencode-zen
+    model: kimi-k2.7-code
+  - provider: openai-codex
+    model: gpt-5.6-sol
+
+terminal:
+  home_mode: profile
+
+delegation:
+  orchestrator_enabled: false
+  max_spawn_depth: 1
+  max_concurrent_children: 1
+  subagent_auto_approve: false
+
+kanban:
+  max_in_progress: 1
+  max_spawn: 1
+  max_in_progress_per_profile: 1
+  auto_decompose: false
+
+memory:
+  write_approval: true

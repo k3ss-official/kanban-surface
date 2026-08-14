@@ -1,0 +1,198 @@
+{
+  "schema_version": 2,
+  "routing_policy": {
+    "primary": {
+      "provider": "opencode-go",
+      "model": "glm-5.2"
+    },
+    "fallback_providers": [
+      {
+        "provider": "opencode-zen",
+        "model": "kimi-k2.7-code",
+        "equivalence": "independent-payg-reserve"
+      },
+      {
+        "provider": "openai-codex",
+        "model": "gpt-5.6-sol",
+        "equivalence": "independent-subscription-fallback"
+      }
+    ]
+  },
+  "integrations": {
+    "last30days": {
+      "repository": "https://github.com/mvanhorn/last30days-skill",
+      "commit": "52f53312ff2f272e16bbc1785e1c04f9d9c19b31",
+      "version": "3.18.4",
+      "skill": "last30days",
+      "profiles": ["research-signal"]
+    },
+    "open_notebook": {
+      "repository": "https://github.com/lfnovo/open-notebook",
+      "version": "1.14.0",
+      "image": "lfnovo/open_notebook:1.14.0@sha256:e53f90d6153fcf4a64604d9a0c12cb0428a32cfb8dbcbb72e81ab12c013ee330",
+      "writer_profile": "knowledge-custodian",
+      "read_profiles": [
+        "default",
+        "research-lead",
+        "research-source",
+        "knowledge-provenance",
+        "writer-director",
+        "writer-longform",
+        "writer-social",
+        "audit-controller"
+      ]
+    }
+  },
+  "orchestrator": {
+    "profile": "default",
+    "display_name": "Orchestrator",
+    "description": "User-facing chief of staff and Hermes orchestrator. Owns intake, task graphs, assignment, human interaction, acceptance and final synthesis; routes specialist execution through Kanban.",
+    "toolsets": ["kanban", "memory", "session_search", "skills", "clarify", "todo", "web"],
+    "open_notebook_access": "read"
+  },
+  "profiles": [
+    {
+      "name": "research-lead",
+      "display_name": "Research and Intelligence Lead",
+      "kind": "lead",
+      "parent": "default",
+      "description": "Plans evidence gathering, assigns bounded investigations, reconciles research outputs and hands source-grounded dossiers to the knowledge team.",
+      "toolsets": ["kanban", "web", "browser", "file", "memory", "session_search", "skills", "todo"],
+      "skills": ["research/bullshit-radar", "research/research-corpus-collation"],
+      "open_notebook_access": "read"
+    },
+    {
+      "name": "research-signal",
+      "display_name": "Current Signal Scout",
+      "kind": "specialist",
+      "parent": "research-lead",
+      "description": "Finds recent developments, community signals, emerging risks and candidate leads; reports freshness and uncertainty without promoting claims to knowledge.",
+      "toolsets": ["kanban", "web", "browser", "x_search", "file", "skills"],
+      "skills": ["last30days", "research/blogwatcher", "research/scrapling-anti-bot-fetch"]
+    },
+    {
+      "name": "research-source",
+      "display_name": "Primary Source Investigator",
+      "kind": "specialist",
+      "parent": "research-lead",
+      "description": "Retrieves authoritative documentation, papers, policies, laws and datasets and records exact provenance, scope, dates and limitations.",
+      "toolsets": ["kanban", "web", "browser", "file", "skills"],
+      "skills": ["research/research-corpus-collation", "research/arxiv", "research/llm-wiki"],
+      "open_notebook_access": "read"
+    },
+    {
+      "name": "knowledge-custodian",
+      "display_name": "Verification and Knowledge Custodian",
+      "kind": "lead",
+      "parent": "default",
+      "description": "Owns epistemic verification and approved knowledge admission. It is the sole Hermes profile permitted to request an Open Notebook write.",
+      "toolsets": ["kanban", "web", "file", "memory", "session_search", "skills", "todo"],
+      "skills": ["research/bullshit-radar", "research/research-corpus-collation"],
+      "open_notebook_access": "write"
+    },
+    {
+      "name": "knowledge-provenance",
+      "display_name": "Provenance Reviewer",
+      "kind": "specialist",
+      "parent": "knowledge-custodian",
+      "description": "Independently checks whether sources support claims, identifies contradictions and missing evidence, and returns a review without writing canonical knowledge.",
+      "toolsets": ["kanban", "web", "file", "session_search", "skills"],
+      "skills": ["research/bullshit-radar", "research/research-corpus-collation"],
+      "open_notebook_access": "read"
+    },
+    {
+      "name": "engineering-lead",
+      "display_name": "Engineering and Automation Lead",
+      "kind": "lead",
+      "parent": "default",
+      "description": "Owns technical design, implementation planning, engineering handoffs and acceptance; separates building from independent review.",
+      "toolsets": ["kanban", "file", "terminal", "debugging", "code_execution", "browser", "web", "memory", "session_search", "skills", "clarify", "todo"],
+      "skills": ["software-development/plan", "software-development/requesting-code-review", "github/codebase-inspection"]
+    },
+    {
+      "name": "engineering-builder",
+      "display_name": "Builder and Implementer",
+      "kind": "specialist",
+      "parent": "engineering-lead",
+      "description": "Implements bounded code, integration and automation tasks in the supplied workspace, runs relevant tests and returns exact change evidence.",
+      "toolsets": ["kanban", "file", "terminal", "debugging", "code_execution", "skills"],
+      "skills": ["software-development/test-driven-development", "software-development/systematic-debugging", "github/github-repo-management", "github/github-pr-workflow"]
+    },
+    {
+      "name": "engineering-review",
+      "display_name": "Engineering Test and Review",
+      "kind": "specialist",
+      "parent": "engineering-lead",
+      "description": "Independently reviews changes, runs regression and failure-path tests, reports defects and never certifies work it did not inspect.",
+      "toolsets": ["kanban", "file", "terminal", "debugging", "code_execution", "browser", "web", "skills"],
+      "skills": ["software-development/requesting-code-review", "github/github-code-review", "github/codebase-inspection"]
+    },
+    {
+      "name": "infra-guardian",
+      "display_name": "Infrastructure Guardian",
+      "kind": "lead",
+      "parent": "default",
+      "description": "Owns systems, network, domains, DNS, availability, access, backups and recovery while approval-gating lockout, outage and ownership-risk actions.",
+      "toolsets": ["kanban", "file", "terminal", "web", "memory", "session_search", "skills", "todo"],
+      "skills": ["sysop/hermes-operations", "secret-governance-audit", "sysop-cloudflare-review"]
+    },
+    {
+      "name": "infra-sysops",
+      "display_name": "SysOps Worker",
+      "kind": "specialist",
+      "parent": "infra-guardian",
+      "description": "Diagnoses and executes approved host, service, container, storage, capacity, backup and recovery work with rollback evidence.",
+      "toolsets": ["kanban", "file", "terminal", "web", "skills"],
+      "skills": ["sysop/hermes-operations", "sysop/ssh-tmux-durable-sessions", "sysop/remote-node-tourism", "sysop/bash-scripting-pitfalls"]
+    },
+    {
+      "name": "infra-netops",
+      "display_name": "NetOps Domain and DNS Worker",
+      "kind": "specialist",
+      "parent": "infra-guardian",
+      "description": "Diagnoses routing, firewalls, connectivity, DNS, domains, certificates and email authentication; mutations require explicit authority and verification.",
+      "toolsets": ["kanban", "file", "terminal", "web", "browser", "skills"],
+      "skills": ["sysop-cloudflare-review", "secret-governance-audit", "sysop/remote-node-tourism"]
+    },
+    {
+      "name": "writer-director",
+      "display_name": "Writer and Content Director",
+      "kind": "lead",
+      "parent": "default",
+      "description": "Owns editorial strategy, the human owner's voice, content-series continuity, platform adaptation and approval-aware publication handoffs.",
+      "toolsets": ["kanban", "file", "web", "memory", "session_search", "skills", "todo"],
+      "skills": ["creative/humanizer"],
+      "open_notebook_access": "read"
+    },
+    {
+      "name": "writer-longform",
+      "display_name": "Essay and Long-Form Writer",
+      "kind": "specialist",
+      "parent": "writer-director",
+      "description": "Develops essays, articles, newsletters and scripts from an approved brief and verified evidence while preserving argument, narrative and voice.",
+      "toolsets": ["kanban", "file", "web", "memory", "session_search", "skills"],
+      "skills": ["creative/humanizer", "research/research-paper-writing"],
+      "open_notebook_access": "read"
+    },
+    {
+      "name": "writer-social",
+      "display_name": "Social Content Manager",
+      "kind": "specialist",
+      "parent": "writer-director",
+      "description": "Adapts approved material into platform-native posts, threads, captions and campaign assets; it drafts but does not publish without approved authority.",
+      "toolsets": ["kanban", "file", "web", "browser", "memory", "session_search", "skills"],
+      "skills": ["creative/humanizer", "devops/x-via-grok"],
+      "open_notebook_access": "read"
+    },
+    {
+      "name": "audit-controller",
+      "display_name": "Independent Audit Controller",
+      "kind": "audit",
+      "parent": "default",
+      "description": "Independently verifies external mutations and acceptance evidence. It reports pass, reject or blocked and never repairs the work it audits.",
+      "toolsets": ["kanban", "file", "terminal", "web", "browser", "session_search", "skills"],
+      "skills": ["secret-governance-audit", "github/github-code-review"],
+      "open_notebook_access": "read"
+    }
+  ]
+}

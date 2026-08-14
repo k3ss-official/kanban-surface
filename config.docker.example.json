@@ -1,0 +1,70 @@
+{
+  "repo_dir": "/workspace/work-ledger",
+  "repo_url": "https://github.com/your-org/work-ledger.git",
+  "repo_branch": "main",
+  "source_base_url": "https://github.com/your-org/work-ledger/blob/main",
+  "boards": [
+    "sys-intake",
+    "work-research",
+    "work-knowledge",
+    "work-engineering",
+    "work-infra",
+    "work-writer",
+    "sys-input",
+    "sys-audit",
+    "sys-done"
+  ],
+  "board": {
+    "backend": "hermes",
+    "path": null
+  },
+  "gateway": {
+    "bind": "0.0.0.0",
+    "containerized": true,
+    "port": 8742,
+    "audit_log": "/var/lib/kanban-surface/gateway-audit.jsonl",
+    "tokens": {
+      "REPLACE_OWNER_TOKEN": {
+        "agent": "owner",
+        "create": true,
+        "move_to": [
+          "sys-intake",
+          "work-research",
+          "work-knowledge",
+          "work-engineering",
+          "work-infra",
+          "work-writer",
+          "sys-input",
+          "sys-audit",
+          "sys-done"
+        ],
+        "comment": true,
+        "archive": true
+      },
+      "REPLACE_CONTRIBUTOR_TOKEN": {
+        "agent": "contributor",
+        "create": true,
+        "move_to": [
+          "sys-intake",
+          "work-research",
+          "work-engineering",
+          "work-writer"
+        ],
+        "comment": true,
+        "archive": false
+      }
+    }
+  },
+  "triggers": {
+    "human_telegram_chat_id": "REPLACE_TELEGRAM_CHAT_ID",
+    "reject_limit": 2,
+    "watch_interval_secs": 15
+  },
+  "sync": {
+    "intake_interval_secs": 600,
+    "snapshot_interval_secs": 3600,
+    "snapshot_path": "docs/board-state.md",
+    "push_retries": [0, 2, 4, 8, 16],
+    "wip_limit": 1
+  }
+}
