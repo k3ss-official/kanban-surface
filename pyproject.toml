@@ -1,3 +1,7 @@
+# Tool configuration only. This repository is not an installable Python package:
+# there is no [project] table and nothing is published to PyPI. Install
+# dependencies from requirements.txt / requirements-dev.txt after cloning.
+
 [tool.black]
 line-length = 88
 target-version = ["py311"]

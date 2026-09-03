@@ -2,6 +2,8 @@
 
 Kanban Surface reads a deliberately small Markdown contract. This keeps Git useful to humans while giving the synchroniser stable identifiers.
 
+Operators typically keep this contract in a private Git-backed **collab-mem** repository. This snapshot ships only the synthetic [`examples/ledger`](../examples/ledger). It does not clone or write a live collab-mem.
+
 ## Core rule
 
 Every card imported from Git has a unique `cm_ref`. Do not recycle identifiers after completion; stable references make reconciliation and receipts idempotent.

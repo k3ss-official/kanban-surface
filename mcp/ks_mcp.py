@@ -6,9 +6,11 @@ Claude Code, Claude Desktop, Codex, Cursor — gets the shared board as native t
 config block. The shim holds NO authority of its own: identity and scope come entirely from
 KS_TOKEN, and every call still passes the gateway's per-token rule table (spec §8).
 
-Transport: stdio JSON-RPC 2.0 (MCP 2025-11-25). Stdlib only. Config via env:
-  KS_GATEWAY_URL   e.g. https://ks.example.com
-  KS_TOKEN         this runtime's bearer token
+Transport: stdio JSON-RPC 2.0 (MCP 2025-11-25). Stdlib only. Optional and off
+by default — this snapshot does not ship a live KS_TOKEN or bind 0.0.0.0.
+Config via env when an operator enables the shim:
+  KS_GATEWAY_URL   loopback only, e.g. http://127.0.0.1:8742
+  KS_TOKEN         this runtime's bearer token (operator-supplied, never committed)
 """
 
 from __future__ import annotations
