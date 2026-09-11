@@ -1,0 +1,11 @@
+{
+  "name": "kanban-surface",
+  "user": "ubuntu",
+  "install": "pip install --user -r requirements-dev.txt",
+  "terminals": [
+    {
+      "name": "ks-demo",
+      "command": "python3 dev/demo.py --no-browser --port 8742"
+    }
+  ]
+}
