@@ -36,7 +36,7 @@ class TestProfileArchitecture(unittest.TestCase):
         cls.manifest = json.loads(MANIFEST_PATH.read_text())
         cls.profiles = {item["name"]: item for item in cls.manifest["profiles"]}
 
-    def test_manifest_defines_rae_plus_exact_persistent_team(self):
+    def test_manifest_defines_reference_team_of_sixteen(self):
         self.assertEqual(self.manifest["schema_version"], 2)
         self.assertEqual(self.manifest["orchestrator"]["profile"], "default")
         self.assertEqual(set(self.profiles), EXPECTED_PROFILES)

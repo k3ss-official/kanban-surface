@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 fail=0
 for suite in tests/test_cm_parser.py tests/test_receipts.py tests/test_profiles.py tests/test_config.py \
              tests/test_mcp.py tests/test_workers.py tests/test_open_notebook.py \
-             tests/test_integration.py; do
+             tests/test_integration.py tests/test_docs.py; do
   echo "── $suite"
   python3 "$suite" >/tmp/ks-test.out 2>&1 && tail -3 /tmp/ks-test.out \
     || { fail=1; cat /tmp/ks-test.out; }

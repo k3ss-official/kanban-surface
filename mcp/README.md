@@ -1,6 +1,10 @@
 # Kanban Surface MCP adapter
 
-`mcp/ks_mcp.py` exposes the Kanban Surface gateway as native MCP tools. The adapter holds no authority: identity and permissions come from `KS_TOKEN`, and every call is checked by the gateway's per-token policy.
+`mcp/ks_mcp.py` is an **optional outsider interface**. It is **off by default**.
+
+This snapshot does not generate a live `KS_TOKEN`, does not bind `0.0.0.0`, and does not enable systemd. Do not turn the shim on as part of a clean checkout.
+
+When an operator later enables it, the adapter wraps the Kanban Surface gateway as native MCP tools. The adapter holds no authority: identity and permissions come from `KS_TOKEN`, and every call is checked by the gateway's per-token policy. `ks_create` always lands on `sys-intake`.
 
 ## Tools
 
@@ -14,24 +18,24 @@
 
 A denied operation returns an MCP tool error containing the gateway's refusal reason.
 
-## Requirements
+## Requirements (only if you enable it)
 
-Install the repository dependencies:
+The core shim is stdlib-only. The repository still is not a PyPI package:
 
 ```bash
 python3 -m pip install -r requirements.txt
 ```
 
-Set two environment variables:
+Set two environment variables in the **local process environment**, not in git:
 
-- `KS_GATEWAY_URL` — gateway URL, for example `http://127.0.0.1:8742` in local development.
-- `KS_TOKEN` — bearer token for one stable gateway actor.
+- `KS_GATEWAY_URL` — gateway URL. Local default is `http://127.0.0.1:8742`.
+- `KS_TOKEN` — bearer token for one stable gateway actor that you create yourself.
 
-Never commit the token to client configuration tracked by Git.
+Never commit the token. Never bind the host gateway to `0.0.0.0`.
 
 ## Hermes Agent
 
-Add the server through Hermes configuration or the MCP dashboard:
+Add the server through Hermes configuration or the MCP dashboard **only after** you have a loopback gateway and a token you generated yourself:
 
 ```yaml
 mcp_servers:
@@ -66,7 +70,7 @@ Confirm how your client resolves environment-variable placeholders. If it does n
 
 ## Stdio smoke test
 
-With the gateway running, invoke the adapter through the shell:
+With a **local** gateway already running on loopback, invoke the adapter through the shell:
 
 ```bash
 printf '%s\n' \
@@ -83,4 +87,4 @@ printf '%s\n' \
 python3 tests/test_mcp.py
 ```
 
-The test drives the real stdio process through initialization, tool discovery, calls, and a permission refusal against a throwaway gateway.
+The test drives the real stdio process through initialization, tool discovery, calls, and a permission refusal against a throwaway **loopback** gateway. It does not need live Hermes.
