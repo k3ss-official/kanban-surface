@@ -2,7 +2,7 @@
 
 **A thin stations-and-receipts layer on [Hermes Agent](https://github.com/NousResearch/hermes-agent) native Kanban.**
 
-This repository is the `anwhelan01` snapshot of that layer. It composes Hermes primitives rather than replacing them.
+This repository is the canonical `k3ss-official` home of that layer. It composes Hermes primitives rather than replacing them.
 
 - **Durable truth is the Git-backed work ledger** (operators typically call this **collab-mem**). Kanban is the live execution projection.
 - **Nine stations** route work. Board movement is dispatch.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guard stranger-facing honesty for the anwhelan01 snapshot.
+"""Guard stranger-facing honesty for the k3ss-official repo.
 
 These checks stay offline. They do not install a team, mint a token, or touch
 a live Hermes home.
@@ -12,7 +12,7 @@ import re
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-DEAD_ORG = "k3ss-official"
+DEAD_ORG = "anwhelan01"
 LIVE_REPO = "https://github.com/k3ss-official/kanban-surface"
 PUBLIC_DOCS = (
     ROOT / "README.md",
@@ -35,11 +35,11 @@ M4_FLOOR = ("Rae", "scout", "maker", "gatekeeper", "webdevsocials")
 
 
 class TestStrangerDocs(unittest.TestCase):
-    def test_public_docs_point_at_anwhelan01_not_dead_org(self):
+    def test_public_docs_point_at_k3ss_official_not_old_copy(self):
         for path in PUBLIC_DOCS:
             text = path.read_text(encoding="utf-8")
             self.assertNotIn(DEAD_ORG, text, path.name)
-            self.assertNotIn("k3ss-official/kanban-surface", text, path.name)
+            self.assertNotIn("anwhelan01/kanban-surface", text, path.name)
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         security = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
         contributing = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
