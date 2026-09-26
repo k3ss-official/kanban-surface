@@ -2,7 +2,7 @@
 
 > For **Brett** (Chief of Staff / outside-Hermes orchestrator).
 > Written after today's cutover session with Tony. This is the briefing, not a novel.
-> Canonical live truth sits in `anwhelan01/collab-mem`. This file is the *why* and the *what you do next*.
+> Canonical live truth sits in `k3ss-official/collab-mem`. This file is the *why* and the *what you do next*.
 
 ---
 
@@ -14,7 +14,7 @@ You own the next mile. Tony should only see blockers.
 
 Read order before you touch anything:
 
-1. `anwhelan01/collab-mem` → `AGENTS.md` then `daily/2026-09-06.md`
+1. `k3ss-official/collab-mem` → `AGENTS.md` then `daily/2026-09-06.md`
 2. `ROSTER.md`, `FACTS.md`, `MASTER.md`, `CARD-CONTRACT.md`
 3. This file
 4. kanban-surface PRs **#2** (card directive MVP) and **#3** (card chat v2)
@@ -42,8 +42,8 @@ You hire, route, and reconfigure. You are **never in the hot path**. Workers do 
 
 ### 1. collab-mem is a real ledger again — M1 done
 
-- Fresh repo: `anwhelan01/collab-mem`
-- Old repo frozen as `anwhelan01/collab-mem-old` (snapshot only, not current truth)
+- Fresh repo: `k3ss-official/collab-mem`
+- Old repo frozen as `k3ss-official/collab-mem-old` (snapshot only, not current truth)
 - Added `AGENTS.md` (constitution + continuity protocol)
 - Rewrote ROSTER, MASTER, FACTS, CARD-CONTRACT to v3
 - Live project cards: `ask-ebbi-uat`, `kanban-surface`
@@ -301,9 +301,9 @@ Receipt grammar stays parseable. collab-mem beats chat. Later timestamp wins. Hu
 
 | What | Where |
 |---|---|
-| Ledger | `anwhelan01/collab-mem` |
-| Frozen old ledger | `anwhelan01/collab-mem-old` |
-| Surface repo | `anwhelan01/kanban-surface` |
+| Ledger | `k3ss-official/collab-mem` |
+| Frozen old ledger | `k3ss-official/collab-mem-old` |
+| Surface repo | `k3ss-official/kanban-surface` |
 | Directive MVP | PR #2 — `docs/card-chat.md` on that branch |
 | Chat v2 spec | PR #3 — `docs/card-chat.md` on that branch |
 | Continuity instruction for new AIs | `collab-mem/TONY-PREP.md` |

@@ -13,7 +13,7 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEAD_ORG = "k3ss-official"
-LIVE_REPO = "https://github.com/anwhelan01/kanban-surface"
+LIVE_REPO = "https://github.com/k3ss-official/kanban-surface"
 PUBLIC_DOCS = (
     ROOT / "README.md",
     ROOT / "SECURITY.md",

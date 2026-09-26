@@ -2,10 +2,10 @@
 
 Kanban Surface is a security-sensitive execution surface. Small, evidenced changes beat broad rewrites.
 
-Working repository: https://github.com/anwhelan01/kanban-surface
+Working repository: https://github.com/k3ss-official/kanban-surface
 
 ```bash
-git clone https://github.com/anwhelan01/kanban-surface.git
+git clone https://github.com/k3ss-official/kanban-surface.git
 cd kanban-surface
 ```
 
@@ -53,7 +53,7 @@ Changes to board names, receipt grammar, permission verbs, profile authority, le
 - [ ] `./tests/run_all.sh` passes.
 - [ ] `docker compose config --quiet` passes when Compose changes.
 - [ ] Documentation matches the implemented path.
-- [ ] Clone and advisory URLs point at `anwhelan01/kanban-surface`, not a dead org.
+- [ ] Clone and advisory URLs point at `k3ss-official/kanban-surface`, not a dead org.
 - [ ] Rollback or compatibility impact is stated.
 
 ## Style
@@ -67,4 +67,4 @@ Changes to board names, receipt grammar, permission verbs, profile authority, le
 
 Use the private process in `SECURITY.md`; do not file exploitable details as a public issue.
 
-https://github.com/anwhelan01/kanban-surface/security/advisories/new
+https://github.com/k3ss-official/kanban-surface/security/advisories/new

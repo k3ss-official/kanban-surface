@@ -139,7 +139,7 @@ The core board, Git sync, permission gateway, watcher, UI, local demo, and `mcp/
 ### 1. Clone this repository
 
 ```bash
-git clone https://github.com/anwhelan01/kanban-surface.git
+git clone https://github.com/k3ss-official/kanban-surface.git
 cd kanban-surface
 python3 -m pip install -r requirements-dev.txt
 ```
@@ -199,7 +199,7 @@ examples/ledger/   safe, synthetic demonstration ledger
 
 ## Security, provenance, and licensing
 
-- Report vulnerabilities through [GitHub Security Advisories](https://github.com/anwhelan01/kanban-surface/security/advisories/new), not a public issue.
+- Report vulnerabilities through [GitHub Security Advisories](https://github.com/k3ss-official/kanban-surface/security/advisories/new), not a public issue.
 - Never commit credentials, live hostnames, customer data, 1Password renders, or real collab-mem content.
 - This repository's original code is MIT licensed; see [`LICENSE`](LICENSE).
 - Hermes Agent's Kanban implementation is distributed under the upstream Hermes Agent MIT licence. The generic Kanban method is not copied product code.

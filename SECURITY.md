@@ -4,7 +4,7 @@
 
 Report suspected vulnerabilities through GitHub's private security-advisory flow:
 
-https://github.com/anwhelan01/kanban-surface/security/advisories/new
+https://github.com/k3ss-official/kanban-surface/security/advisories/new
 
 Do not open a public issue for authentication bypasses, token exposure, permission-boundary failures, command execution, secret-scope failures, or deployment details that would help exploitation.
 
